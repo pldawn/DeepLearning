@@ -24,7 +24,7 @@ class TrainStepsDefault(TrainSteps):
         if eval_datasets_fn is not None:
             eval_datasets, eval_labels = eval_datasets_fn()
         else:
-            eval_datasets = None
+            eval_datasets, eval_labels = None, None
 
         loss_weights = None if loss_weights_fn is None else loss_weights_fn()
         metrics = None if metrics_fn is None else metrics_fn()
@@ -51,7 +51,7 @@ class TrainStepsDefault(TrainSteps):
                                         validation_split=0.1)
 
         # evaluate
-        if eval_datasets is not None:
+        if eval_datasets is not None and eval_labels is not None:
             eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batch=self.eval_batch_size)
         else:
             eval_result = {}
