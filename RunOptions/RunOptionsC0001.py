@@ -10,6 +10,7 @@ from Datasets.ImdbDatasets import get_imdb_datasets_fn
 from Preprocessings.ImdbPreprocessings import get_imdb_preprocessings_fn
 from LearingRates import CustomizedLearningRates
 from TrainSteps import TrainStepsDefault
+from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 
 
 tf.debugging.set_log_device_placement(False)
@@ -21,32 +22,42 @@ for gpu in gpus:
 def main(args):
     schedule = TrainingSchedule()
 
+    # set hyper-parameters
+    vocab_size = 10000
+    max_sentence_length = 512
+    training_batch_szie = 200
+    eval_batch_szie = 200
+    dropout_rate = 0.5
+    embedding_dim = 300
+    hidden_dim = 300
+
     # add training datasets and eval datasets
-    training_datasets_fn, eval_datasets_fn, encoder = get_imdb_datasets_fn()
+    training_datasets_fn, eval_datasets_fn = get_imdb_datasets_fn(vocab_size)
     schedule.add_training_datasets([training_datasets_fn])
     schedule.add_eval_datasets([eval_datasets_fn])
 
     # add preprocessings
-    vocab_size = encoder.vocab_size
-    preprocessings_fn = get_imdb_preprocessings_fn(vocab_size=vocab_size, max_sentence_length=512)
+    preprocessings_fn = get_imdb_preprocessings_fn(max_sentence_length=max_sentence_length)
     schedule.add_preprocessings([preprocessings_fn])
 
     # add models
-    models_fn = krs.Sequential([
-        krs.layers.Embedding(input_dim=vocab_size + 3, output_dim=128, batch_input_shape=[10, None]),
-        krs.layers.Dropout(rate=0.5, noise_shape=[None, None, 1]),
+    models_lstm_fn = krs.Sequential([
+        krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
+                             batch_input_shape=[training_batch_szie, None]),
+        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         krs.layers.Bidirectional(
-            krs.layers.LSTM(units=128, stateful=True, recurrent_initializer="glorot_uniform", return_sequences=True)
+            krs.layers.LSTM(units=hidden_dim, stateful=True, recurrent_initializer="glorot_uniform",
+                            return_sequences=True)
         ),
-        krs.layers.Dropout(rate=0.5, noise_shape=[None, None, 1]),
-        krs.layers.GlobalAveragePooling1D(),
-        krs.layers.Dense(units=128, activation="tanh"),
+        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
+        SingleVectorAddtiveAttention(units=hidden_dim),
+        krs.layers.Dense(units=hidden_dim, activation="tanh"),
         krs.layers.Dense(1, activation="sigmoid")
     ])
-    schedule.add_models([models_fn])
+    schedule.add_models([models_lstm_fn])
 
     # add losses
-    losses_fn = krs.losses.SparseCategoricalCrossentropy(from_logits=False)
+    losses_fn = krs.losses.BinaryCrossentropy(from_logits=False)
     schedule.add_losses([losses_fn])
 
     # add optimiezers
@@ -54,11 +65,12 @@ def main(args):
     schedule.add_optimizers([optimizers_fn])
 
     # add learning rates
-    learning_rates_fn = CustomizedLearningRates(d_model=128)
+    learning_rates_fn = CustomizedLearningRates(d_model=hidden_dim)
     schedule.add_learning_rates([learning_rates_fn])
 
     # add train steps
-    training_steps_fn = TrainStepsDefault(training_batch_size=10, eval_batch_size=10, epoches=2)
+    training_steps_fn = TrainStepsDefault(training_batch_size=training_batch_szie,
+                                          eval_batch_size=eval_batch_szie, epoches=10)
     schedule.add_training_steps([training_steps_fn])
 
     # add eval steps

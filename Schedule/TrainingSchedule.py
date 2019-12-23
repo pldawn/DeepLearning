@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from datetime import datetime
 
 from Schedule import Schedule
 from Pipelines import TrainingPipelines
@@ -10,6 +11,7 @@ from Pipelines import TrainingPipelines
 
 class TrainingSchedule(Schedule):
     def __init__(self, **kwargs):
+        self.start_time = datetime.strftime(datetime.now(), format="%Y-%m-%d_%H-%M-%S")
         super(TrainingSchedule, self).__init__(**kwargs)
 
     def get_default_pipelines(self):
@@ -27,7 +29,7 @@ class TrainingSchedule(Schedule):
             # convert indices pipeline to concrete training pipeline
             pipeline_dict = dict(pipeline)
 
-            log_dir = os.path.join("log", "%d" % 0)
+            log_dir = os.path.join("log_%s" % self.start_time, "%d" % 0)
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
 
@@ -72,7 +74,7 @@ class TrainingSchedule(Schedule):
             # train
             if preprocessings_fn is not None:
                 training_datasets_fn = preprocessings_fn(datasets_fn=training_datasets_fn)
-                eval_datasets_fn = preprocessings_fn(datasets_fn=eval_datasets_fn, training=False)
+                eval_datasets_fn = preprocessings_fn(datasets_fn=eval_datasets_fn)
 
             result = training_steps_fn(training_datasets_fn=training_datasets_fn,
                                        models_fn=models_fn,
