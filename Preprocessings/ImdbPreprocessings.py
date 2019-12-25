@@ -13,7 +13,7 @@ def get_imdb_preprocessings_fn(max_sentence_length=512):
 
         # pad sentences
         datasets = krs.preprocessing.sequence.pad_sequences(
-            datasets, value=3, padding='post', maxlen=max_sentence_length)
+            datasets, value=0, padding='post', maxlen=max_sentence_length)
 
         # define datasets function
         def datasets_fn():

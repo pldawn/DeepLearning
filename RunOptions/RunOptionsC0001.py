@@ -24,6 +24,7 @@ def main(args):
 
     # set hyper-parameters
     vocab_size = 10000
+    epoches = 20
     max_sentence_length = 512
     training_batch_szie = 200
     eval_batch_szie = 200
@@ -43,7 +44,7 @@ def main(args):
     # add models
     models_lstm_fn = krs.Sequential([
         krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
-                             batch_input_shape=[training_batch_szie, None]),
+                             batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         krs.layers.Bidirectional(
             krs.layers.LSTM(units=hidden_dim, stateful=True, recurrent_initializer="glorot_uniform",
@@ -70,7 +71,7 @@ def main(args):
 
     # add train steps
     training_steps_fn = TrainStepsDefault(training_batch_size=training_batch_szie,
-                                          eval_batch_size=eval_batch_szie, epoches=10)
+                                          eval_batch_size=eval_batch_szie, epoches=epoches)
     schedule.add_training_steps([training_steps_fn])
 
     # add eval steps

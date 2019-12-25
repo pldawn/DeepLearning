@@ -39,8 +39,8 @@ class TrainStepsDefault(TrainSteps):
 
         callbacks = [
             krs.callbacks.TensorBoard(log_dir),
-            krs.callbacks.ModelCheckpoint(checkpoint, save_best_only=False),
-            krs.callbacks.EarlyStopping(patience=10, min_delta=1e-3)
+            # krs.callbacks.ModelCheckpoint(checkpoint, save_best_only=False),
+            # krs.callbacks.EarlyStopping(patience=10, min_delta=1e-3)
         ]
 
         models_fn.compile(optimizer=optimizers_fn, loss=losses_fn, metrics=metrics, loss_weights=loss_weights)
@@ -48,11 +48,11 @@ class TrainStepsDefault(TrainSteps):
         # training
         training_result = models_fn.fit(x=training_datasets, y=training_labels, epochs=self.epoches,
                                         batch_size=self.training_batch_size, callbacks=callbacks,
-                                        validation_split=0.1)
+                                        validation_split=(eval_datasets, eval_labels))
 
         # evaluate
         if eval_datasets is not None and eval_labels is not None:
-            eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batch=self.eval_batch_size)
+            eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batchs_size=self.eval_batch_size)
         else:
             eval_result = {}
 
