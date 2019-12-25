@@ -51,10 +51,10 @@ class TrainStepsDefault(TrainSteps):
                                         validation_split=(eval_datasets, eval_labels))
 
         # evaluate
-        if eval_datasets is not None and eval_labels is not None:
-            eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batchs_size=self.eval_batch_size)
-        else:
-            eval_result = {}
+        # if eval_datasets is not None and eval_labels is not None:
+        #     eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batchs_size=self.eval_batch_size)
+        # else:
+        #     eval_result = {}
 
         result = {"traing_result": training_result, "eval_result": eval_result}
 
