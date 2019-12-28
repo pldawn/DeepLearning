@@ -12,7 +12,6 @@ from Preprocessings.ImdbPreprocessings import get_imdb_preprocessings_fn
 from LearingRates import CustomizedLearningRates
 from TrainSteps import TrainStepsDefault
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
-from Optimizers import MaskedAdam
 
 
 tf.debugging.set_log_device_placement(False)
