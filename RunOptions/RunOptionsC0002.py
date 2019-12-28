@@ -1,4 +1,4 @@
-# compare different initializers
+# compare different dropout schedules
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -43,29 +43,27 @@ def main(args):
     schedule.add_preprocessings([preprocessings_fn])
 
     # add models
-    # glorot_uniform, glorot_uniform
+    # dropout
     models_lstm_fn_1 = krs.Sequential([
         krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
                              batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
-        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
+        krs.layers.Dropout(rate=dropout_rate),
         krs.layers.Bidirectional(
-            krs.layers.LSTM(units=hidden_dim, stateful=True, recurrent_initializer="glorot_uniform",
-                            return_sequences=True)
+            krs.layers.LSTM(units=hidden_dim, stateful=True, return_sequences=True)
         ),
-        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
+        krs.layers.Dropout(rate=dropout_rate),
         SingleVectorAddtiveAttention(units=hidden_dim),
         krs.layers.Dense(units=hidden_dim, activation="tanh"),
         krs.layers.Dense(1, activation="sigmoid")
     ])
 
-    # glorot_uniform, orthogonal
+    # drop word
     models_lstm_fn_2 = krs.Sequential([
         krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
                              batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         krs.layers.Bidirectional(
-            krs.layers.LSTM(units=hidden_dim, stateful=True, recurrent_initializer="glorot_uniform",
-                            return_sequences=True)
+            krs.layers.LSTM(units=hidden_dim, stateful=True, return_sequences=True)
         ),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         SingleVectorAddtiveAttention(units=hidden_dim),
@@ -73,14 +71,13 @@ def main(args):
         krs.layers.Dense(1, activation="sigmoid")
     ])
 
-    # orthogonal, orthogonal
+    # dropout + dropconnection
     models_lstm_fn_3 = krs.Sequential([
         krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
                              batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         krs.layers.Bidirectional(
-            krs.layers.LSTM(units=hidden_dim, stateful=True, kernel_initializer="orthogonal",
-                            return_sequences=True)
+            krs.layers.LSTM(units=hidden_dim, stateful=True, return_sequences=True, dropout=0.5, recurrent_dropout=0.5)
         ),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         SingleVectorAddtiveAttention(units=hidden_dim),
@@ -88,14 +85,13 @@ def main(args):
         krs.layers.Dense(1, activation="sigmoid")
     ])
 
-    # orthogonal, glorot_uniform
+    # drop word + dropconnection
     models_lstm_fn_4 = krs.Sequential([
         krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
                              batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         krs.layers.Bidirectional(
-            krs.layers.LSTM(units=hidden_dim, stateful=True, kernel_initializer="orthogonal",
-                            recurrent_initializer="glorot_uniform", return_sequences=True)
+            krs.layers.LSTM(units=hidden_dim, stateful=True, return_sequences=True, dropout=0.5, recurrent_dropout=0.5)
         ),
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         SingleVectorAddtiveAttention(units=hidden_dim),
@@ -103,16 +99,13 @@ def main(args):
         krs.layers.Dense(1, activation="sigmoid")
     ])
 
-    # uniform, uniform
+    # non-dropout
     models_lstm_fn_5 = krs.Sequential([
         krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
                              batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
-        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         krs.layers.Bidirectional(
-            krs.layers.LSTM(units=hidden_dim, stateful=True, recurrent_initializer="uniform",
-                            kernel_initializer="uniform", return_sequences=True)
+            krs.layers.LSTM(units=hidden_dim, stateful=True, return_sequences=True)
         ),
-        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         SingleVectorAddtiveAttention(units=hidden_dim),
         krs.layers.Dense(units=hidden_dim, activation="tanh"),
         krs.layers.Dense(1, activation="sigmoid")
