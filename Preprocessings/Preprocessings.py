@@ -2,42 +2,53 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as krs
 import tensorflow_datasets as tfds
 
 
-def add_eos(example, vocab_size, with_label):
-    if with_label:
-        new_exapmle = {}
+def add_eos_to_texts(inputs, start="<START>", end="<END>"):
+    output = [[start] + list(inp) + [end] for inp in inputs]
 
-        for k in example:
-            if k == 'label':
-                new_exapmle[k] = example[k]
-            else:
-                new_exapmle[k] = tf.concat([[vocab_size], example[k], [vocab_size + 1]], axis=0)
-
-    else:
-        new_exapmle = tf.concat([[vocab_size], example, [vocab_size + 1]], axis=0)
-
-    return new_exapmle
+    return output
 
 
-def pad_sequence(example, max_sentence_length, padding_value, with_label):
-    if with_label:
-        new_example = {}
+def add_eos_to_ids(inputs, start=1, end=2):
+    output = [[start] + list(inp) + [end] for inp in inputs]
 
-        for k in example:
-            if k == 'label':
-                new_example[k] = example[k]
-            else:
-                pad = [padding_value] * max_sentence_length
-                new_example[k] = tf.concat([example[k], pad], axis=0)
-                new_example[k] = new_example[k][:max_sentence_length]
+    return output
 
-    else:
-        pad = [padding_value] * max_sentence_length
-        new_example = tf.concat([example, pad], axis=0)
-        new_example = new_example[:max_sentence_length]
 
-    return new_example
+def ordinal_encode_1d(labels, label_table=None):
+    if label_table is None:
+        unique_labels = set(labels)
+        label_table = {}
+
+        for ind, label in enumerate(unique_labels):
+            label_table[label] = ind
+
+    ordinal_labels = [label_table[label] for label in labels]
+
+    return ordinal_labels, label_table
+
+
+def ordinal_encode_2d(labels, all_label_tables=None):
+    kinds_num = len(labels[0])
+    all_ordinal_labels = []
+
+    if all_label_tables is None:
+        all_label_tables = [None] * kinds_num
+
+    all_kinds_labels = list(zip(*labels))
+
+    for ind in range(len(all_kinds_labels)):
+        one_kind_labels = all_kinds_labels[ind]
+        label_table = all_label_tables[ind]
+        one_kind_ordinal_labels, one_kind_label_table = ordinal_encode_1d(one_kind_labels, label_table=label_table)
+        all_ordinal_labels.append(one_kind_ordinal_labels)
+
+        if all_label_tables is None:
+            all_label_tables[ind] = one_kind_label_table
+
+    return all_ordinal_labels, all_label_tables

@@ -73,8 +73,12 @@ class TrainingSchedule(Schedule):
 
             # train
             if preprocessings_fn is not None:
-                training_datasets_fn = preprocessings_fn(datasets_fn=training_datasets_fn)
-                eval_datasets_fn = preprocessings_fn(datasets_fn=eval_datasets_fn)
+                training_preprocessing_result = preprocessings_fn(datasets_fn=training_datasets_fn)
+                training_datasets_fn = training_preprocessing_result.get_datasets_fn()
+                eval_preprocessing_result = preprocessings_fn(datasets_fn=eval_datasets_fn,
+                                                              **training_preprocessing_result.get(
+                                                                  discard=['datasets_fn']))
+                eval_datasets_fn = eval_preprocessing_result.get_datasets_fn()
 
             result = training_steps_fn(training_datasets_fn=training_datasets_fn,
                                        models_fn=models_fn,
