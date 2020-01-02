@@ -9,6 +9,7 @@ import tensorflow as tf
 import tensorflow.keras as krs
 
 from Schedule import TrainingSchedule
+from Pipelines import TrainingPipelines
 from Datasets.TNewsDatasets import get_tnews_datasets_fn
 from Preprocessings.TNewsPreprocessings import get_tnews_preprocessings_fn
 from Preprocessings import BPETokenizer
@@ -105,6 +106,23 @@ def main(args):
         return metrcis
 
     schedule.add_metrics([metrics_fn])
+
+    # add pipelines
+    tp1 = TrainingPipelines()
+    tp1.add_process_method_num('training_datasets', 1)
+    tp1.add_process_method_num('eval_datasets', 1)
+    tp1.add_process_method_num('preprocessings', 1)
+    tp1.add_process_method_num('models', 1)
+    tp1.add_process_method_num('losses', 1)
+    tp1.add_process_method_num('optimizers', 3)
+    tp1.add_process_method_num('learning_rates', 2)
+    tp1.add_process_method_num('training_steps', 2)
+    tp1.add_process_method_num('metrics', 1)
+
+    tp1.add_process()
+
+
+    schedule.add_pipelines(tp1)
 
     results = schedule.run()
 
