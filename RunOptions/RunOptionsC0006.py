@@ -1,16 +1,19 @@
-# compare different batch schedules
+# compare different learning rate schedules
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import math
 
 import tensorflow as tf
 import tensorflow.keras as krs
 
 from Schedule import TrainingSchedule
-from Datasets.ImdbDatasets import get_imdb_datasets_fn
-from Preprocessings.ImdbPreprocessings import get_imdb_preprocessings_fn
+from Datasets.TNewsDatasets import get_tnews_datasets_fn
+from Preprocessings.TNewsPreprocessings import get_tnews_preprocessings_fn
+from Preprocessings import BPETokenizer
 from LearingRates import WarmupLearningRates
-from TrainSteps import TrainStepsDefault
+from TrainSteps import TrainStepsDefault, TrainStepsReduceLROnPlateau
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 
 
@@ -27,19 +30,22 @@ def main(args):
     vocab_size = 10000
     epoches = 20
     max_sentence_length = 512
-    training_batch_szie = 10 # 100 200 500
+    training_batch_szie = 200
     eval_batch_szie = 200
-    dropout_rate = 0.0
+    dropout_rate = 0.5
     embedding_dim = 300
     hidden_dim = 300
+    num_class = 15
 
     # add training datasets and eval datasets
-    training_datasets_fn, eval_datasets_fn = get_imdb_datasets_fn(vocab_size)
+    training_datasets_fn, eval_datasets_fn, _ = get_tnews_datasets_fn(split=['training', 'validation'])
     schedule.add_training_datasets([training_datasets_fn])
     schedule.add_eval_datasets([eval_datasets_fn])
 
     # add preprocessings
-    preprocessings_fn = get_imdb_preprocessings_fn(max_sentence_length=max_sentence_length)
+    bpe_tokenizer = BPETokenizer()
+    preprocessings_fn = get_tnews_preprocessings_fn(max_sentence_length=max_sentence_length,
+                                                    tokenizer=bpe_tokenizer)
     schedule.add_preprocessings([preprocessings_fn])
 
     # add models
@@ -53,28 +59,38 @@ def main(args):
         krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
         SingleVectorAddtiveAttention(units=hidden_dim),
         krs.layers.Dense(units=hidden_dim, activation="tanh"),
-        krs.layers.Dense(1, activation="sigmoid")
+        krs.layers.Dense(num_class, activation="softmax")
     ])
 
     schedule.add_models([models_lstm_fn])
 
     # add losses
-    losses_fn = krs.losses.BinaryCrossentropy(from_logits=False)
+    losses_fn = krs.losses.SparseCategoricalCrossentropy(from_logits=False)
     schedule.add_losses([losses_fn])
 
     # add optimiezers
-    optimizers_fn = krs.optimizers.Adam()
+    optimizers_fn_1 = krs.optimizers.SGD()
+    optimizers_fn_2 = krs.optimizers.Adam()
+    optimizers_fn_3 = krs.optimizers.Adam(decay=1e-5)
 
-    schedule.add_optimizers([optimizers_fn])
+    schedule.add_optimizers([optimizers_fn_1, optimizers_fn_2, optimizers_fn_3])
 
     # add learning rates
-    learning_rates_fn = WarmupLearningRates(d_model=hidden_dim)
-    schedule.add_learning_rates([learning_rates_fn])
+    # constant
+    learning_rates_fn_1 = 1 / math.sqrt(hidden_dim)
+
+    # warmup
+    learning_rates_fn_2 = WarmupLearningRates(d_model=hidden_dim)
+
+    schedule.add_learning_rates([learning_rates_fn_1, learning_rates_fn_2])
 
     # add train steps
-    training_steps_fn = TrainStepsDefault(training_batch_size=training_batch_szie,
-                                          eval_batch_size=eval_batch_szie, epoches=epoches)
-    schedule.add_training_steps([training_steps_fn])
+    training_steps_fn_1 = TrainStepsDefault(training_batch_size=training_batch_szie,
+                                            eval_batch_size=eval_batch_szie, epoches=epoches)
+    training_steps_fn_2 = TrainStepsReduceLROnPlateau(training_batch_size=training_batch_szie,
+                                                      eval_batch_size=eval_batch_szie, epoches=epoches)
+
+    schedule.add_training_steps([training_steps_fn_1, training_steps_fn_2])
 
     # add eval steps
 

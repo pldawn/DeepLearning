@@ -10,7 +10,7 @@ from Schedule import TrainingSchedule
 from Datasets.TNewsDatasets import get_tnews_datasets_fn
 from Preprocessings.TNewsPreprocessings import get_tnews_preprocessings_fn
 from Preprocessings import CharTokenizer, JiebaTokenizer, BPETokenizer
-from LearingRates import CustomizedLearningRates
+from LearingRates import WarmupLearningRates
 from TrainSteps import TrainStepsDefault
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 
@@ -70,7 +70,7 @@ def main(args):
     schedule.add_models([models_lstm_fn])
 
     # add losses
-    losses_fn = krs.losses.BinaryCrossentropy(from_logits=False)
+    losses_fn = krs.losses.SparseCategoricalCrossentropy(from_logits=False)
     schedule.add_losses([losses_fn])
 
     # add optimiezers
@@ -79,7 +79,7 @@ def main(args):
     schedule.add_optimizers([optimizers_fn])
 
     # add learning rates
-    learning_rates_fn = CustomizedLearningRates(d_model=hidden_dim)
+    learning_rates_fn = WarmupLearningRates(d_model=hidden_dim)
     schedule.add_learning_rates([learning_rates_fn])
 
     # add train steps

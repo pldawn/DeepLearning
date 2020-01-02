@@ -4,3 +4,4 @@ from __future__ import print_function
 
 from TrainSteps.TrainSteps import TrainSteps
 from TrainSteps.TrainStepsDefault import TrainStepsDefault
+from TrainSteps.TrainStepsReduceLROnPlateau import TrainStepsReduceLROnPlateau

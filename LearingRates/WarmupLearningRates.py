@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 
 
 # learning_rate = (d_model * -0.5) * min(step_num ** -0.5, step_num * warm_up_steps ** -1.5))
-class CustomizedLearningRates(krs.optimizers.schedules.LearningRateSchedule):
+class WarmupLearningRates(krs.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warm_up_steps=4000):
-        super(CustomizedLearningRates, self).__init__()
+        super(WarmupLearningRates, self).__init__()
         self.d_model = tf.cast(d_model, tf.float32)
         self.warm_up_steps = tf.cast(warm_up_steps, tf.float32)
 

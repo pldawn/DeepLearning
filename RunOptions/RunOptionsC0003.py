@@ -9,7 +9,7 @@ import tensorflow.keras as krs
 from Schedule import TrainingSchedule
 from Datasets.ImdbDatasets import get_imdb_datasets_fn
 from Preprocessings.ImdbPreprocessings import get_imdb_preprocessings_fn
-from LearingRates import CustomizedLearningRates
+from LearingRates import WarmupLearningRates
 from TrainSteps import TrainStepsDefault
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 from Optimizers import MaskedAdam
@@ -79,7 +79,7 @@ def main(args):
     schedule.add_optimizers([optimizers_fn_1, optimizers_fn_2, optimizers_fn_3, optimizers_fn_4])
 
     # add learning rates
-    learning_rates_fn = CustomizedLearningRates(d_model=hidden_dim)
+    learning_rates_fn = WarmupLearningRates(d_model=hidden_dim)
     schedule.add_learning_rates([learning_rates_fn])
 
     # add train steps
