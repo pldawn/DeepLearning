@@ -9,7 +9,6 @@ import tensorflow.keras as krs
 class SingleVectorAddtiveAttention(krs.layers.Layer):
     def __init__(self, units, activation=krs.activations.tanh, **kwargs):
         self.units = units
-        self.activation = krs.layers.Activation(activation)
         self.kernel = None
         super(SingleVectorAddtiveAttention, self).__init__(**kwargs)
 
@@ -27,8 +26,7 @@ class SingleVectorAddtiveAttention(krs.layers.Layer):
 
     def get_config(self):
         config = {
-            "units": self.units,
-            "activation": self.activation.name
+            "units": self.units
         }
 
         return config

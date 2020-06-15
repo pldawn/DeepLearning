@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import time
 
 import tensorflow as tf
 import tensorflow.keras as krs
@@ -48,11 +47,11 @@ class TrainStepsDefault(TrainSteps):
         # training
         training_result = models_fn.fit(x=training_datasets, y=training_labels, epochs=self.epoches,
                                         batch_size=self.training_batch_size, callbacks=callbacks,
-                                        validation_split=(eval_datasets, eval_labels))
+                                        validation_data=(eval_datasets, eval_labels))
 
         # evaluate
         if eval_datasets is not None and eval_labels is not None:
-            eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batchs_size=self.eval_batch_size)
+            eval_result = models_fn.evaluate(x=eval_datasets, y=eval_labels, batch_size=self.eval_batch_size)
         else:
             eval_result = {}
 

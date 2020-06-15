@@ -8,7 +8,7 @@ import tensorflow.keras.datasets.imdb as imdb
 
 def get_imdb_datasets_fn(vocab_size, **kwargs):
     # get raw datasets
-    (training_data, training_label), (eval_data, eval_label) =  imdb.load_data(num_words=vocab_size)
+    (training_data, training_label), (eval_data, eval_label) = imdb.load_data(num_words=vocab_size)
 
     # define datasets function
     def training_datasets_fn():

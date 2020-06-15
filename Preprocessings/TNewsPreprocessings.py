@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as krs
 from Preprocessings.Preprocessings import ordinal_encode_1d
@@ -19,6 +20,9 @@ def get_tnews_preprocessings_fn(max_sentence_length=512, tokenizer=None):
 
         labels, label_table = ordinal_encode_1d(labels=labels, label_table=label_table)
 
+        datasets = np.array(datasets)
+        labels = np.array(labels)
+
         def new_datasets_fn():
             return datasets, labels
 
@@ -29,3 +33,4 @@ def get_tnews_preprocessings_fn(max_sentence_length=512, tokenizer=None):
         return result
 
     return tnews_preprocessings_fn
+krs.losses.SparseCategoricalCrossentropy

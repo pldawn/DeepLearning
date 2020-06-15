@@ -92,9 +92,7 @@ def main(args):
     # add metrics
     def metrics_fn():
         metrcis = [
-            krs.metrics.Precision(),
-            krs.metrics.Recall(),
-            krs.metrics.AUC()
+            krs.metrics.sparse_categorical_accuracy
         ]
 
         return metrcis

@@ -72,7 +72,7 @@ class Pipelines:
         sub_pipelines_decode = {}
 
         for process, method_indices in sub_pipelines.items():
-            if method_indices == 'all':
+            if method_indices == 'all' or method_indices == 'ALL':
                 sub_pipelines_decode[process] = [(process, value) for value in
                                                  list(range(self.process_method_nums[process]))]
             if type(method_indices) == list:

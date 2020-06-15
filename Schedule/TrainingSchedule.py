@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import os
 from datetime import datetime
+import tensorflow.keras as krs
 
 from Schedule import Schedule
 from Pipelines import TrainingPipelines
@@ -29,9 +30,11 @@ class TrainingSchedule(Schedule):
             # convert indices pipeline to concrete training pipeline
             pipeline_dict = dict(pipeline)
 
-            log_dir = os.path.join("log_%s" % self.start_time, "%d" % 0)
+            log_dir = os.path.join("log_%s" % self.start_time, "%d" % log_dir_mark)
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
+
+            log_dir_mark += 1
 
             pipeline_file = os.path.join(log_dir, "pipeline.cfg")
             with open(pipeline_file, 'w') as f:
@@ -40,7 +43,7 @@ class TrainingSchedule(Schedule):
 
             # get concrete functions
             training_datasets_fn = self.training_datasets[pipeline_dict['training_datasets']]
-            models_fn = self.models[pipeline_dict['models']]
+            models_fn = krs.models.clone_model(self.models[pipeline_dict['models']])
             losses_fn = self.losses[pipeline_dict['losses']]
             optimizers_fn = self.optimizers[pipeline_dict['optimizers']]
             training_steps_fn = self.training_steps[pipeline_dict['training_steps']]
