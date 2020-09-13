@@ -10,7 +10,7 @@ from Schedule import TrainingSchedule
 from Datasets.TNewsDatasets import get_tnews_datasets_fn
 from Preprocessings.TNewsPreprocessings import get_tnews_preprocessings_fn
 from Preprocessings import CharTokenizer, JiebaTokenizer, BPETokenizer
-from LearingRates import WarmupLearningRates
+from LearningRates import WarmupLearningRates
 from TrainSteps import TrainStepsDefault
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 

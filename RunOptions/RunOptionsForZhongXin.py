@@ -1,4 +1,4 @@
-# compare different optimizers
+# compare different initializers
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -10,9 +10,9 @@ from Schedule import TrainingSchedule
 from Datasets.ImdbDatasets import get_imdb_datasets_fn
 from Preprocessings.ImdbPreprocessings import get_imdb_preprocessings_fn
 from LearningRates import WarmupLearningRates
-from TrainSteps import TrainStepsDefault
-from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
-from Optimizers import MaskedAdam
+from Layers import MultiplicativeDense
+from Losses import FocusLossForSingleTask
+from TrainSteps import TrainStepsForMultiTask
 
 
 tf.debugging.set_log_device_placement(False)
@@ -25,7 +25,7 @@ def main(args):
     schedule = TrainingSchedule()
 
     # set hyper-parameters
-    vocab_size = 10000
+    feature_size = 10000
     epoches = 20
     max_sentence_length = 512
     training_batch_szie = 200
@@ -33,9 +33,11 @@ def main(args):
     dropout_rate = 0.0
     embedding_dim = 300
     hidden_dim = 300
+    layer_nums = 3
+    task_nums = 6
 
     # add training datasets and eval datasets
-    training_datasets_fn, eval_datasets_fn = get_imdb_datasets_fn(vocab_size)
+    training_datasets_fn, eval_datasets_fn = get_imdb_datasets_fn(feature_size)
     schedule.add_training_datasets([training_datasets_fn])
     schedule.add_eval_datasets([eval_datasets_fn])
 
@@ -44,47 +46,40 @@ def main(args):
     schedule.add_preprocessings([preprocessings_fn])
 
     # add models
-    models_lstm_fn = krs.Sequential([
-        krs.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim,
-                             batch_input_shape=[training_batch_szie, None], input_length=max_sentence_length),
-        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
-        krs.layers.Bidirectional(
-            krs.layers.LSTM(units=hidden_dim, stateful=True, return_sequences=True)
-        ),
-        krs.layers.Dropout(rate=dropout_rate, noise_shape=[None, None, 1]),
-        SingleVectorAddtiveAttention(units=hidden_dim),
-        krs.layers.Dense(units=hidden_dim, activation="tanh"),
-        krs.layers.Dense(1, activation="sigmoid")
-    ])
+    inputs = krs.layers.Input(shape=(feature_size,))
+    features = inputs
 
+    for _ in range(layer_nums):
+        addtive_features = krs.layers.Dense(units=hidden_dim//2, activation=krs.activations.tanh, use_bias=True)(features)
+        multiplicative_features = MultiplicativeDense(units=hidden_dim//2, activation=krs.activations.tanh)(features)
+        features = tf.concat([addtive_features, multiplicative_features], axis=-1)
+
+    outputs = []
+
+    for _ in range(task_nums):
+        hidden_1 = krs.layers.Dense(units=hidden_dim, activation=krs.activations.tanh, use_bias=True)(features)
+        hidden_2 = krs.layers.Dense(units=hidden_dim, activation=krs.activations.tanh, use_bias=True)(hidden_1)
+        logits = krs.layers.Dense(units=2)(hidden_2)
+        outputs.append(logits)
+
+    models_lstm_fn = krs.models.Model(inputs=inputs, outputs=outputs)
     schedule.add_models([models_lstm_fn])
 
     # add losses
-    losses_fn = krs.losses.BinaryCrossentropy(from_logits=False)
+    losses_fn = FocusLossForSingleTask(from_logits=True)
     schedule.add_losses([losses_fn])
 
     # add optimiezers
-    # sgd
-    optimizers_fn_1 = krs.optimizers.SGD()
-
-    # adam
-    optimizers_fn_2 = krs.optimizers.Adam()
-
-    # momentum
-    optimizers_fn_3 = krs.optimizers.Adadelta()
-
-    # lazy adam
-    optimizers_fn_4 = MaskedAdam()
-
-    schedule.add_optimizers([optimizers_fn_1, optimizers_fn_2, optimizers_fn_3, optimizers_fn_4])
+    optimizers_fn = krs.optimizers.Adam()
+    schedule.add_optimizers([optimizers_fn])
 
     # add learning rates
     learning_rates_fn = WarmupLearningRates(d_model=hidden_dim)
     schedule.add_learning_rates([learning_rates_fn])
 
     # add train steps
-    training_steps_fn = TrainStepsDefault(training_batch_size=training_batch_szie,
-                                          eval_batch_size=eval_batch_szie, epoches=epoches)
+    training_steps_fn = TrainStepsForMultiTask(training_batch_size=training_batch_szie,
+                                               eval_batch_size=eval_batch_szie, epoches=epoches)
     schedule.add_training_steps([training_steps_fn])
 
     # add eval steps

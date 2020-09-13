@@ -7,7 +7,7 @@ import tensorflow.keras as krs
 
 
 class SingleVectorAddtiveAttention(krs.layers.Layer):
-    def __init__(self, units, activation=krs.activations.tanh, **kwargs):
+    def __init__(self, units, **kwargs):
         self.units = units
         self.kernel = None
         super(SingleVectorAddtiveAttention, self).__init__(**kwargs)

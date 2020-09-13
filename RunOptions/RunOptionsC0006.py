@@ -13,7 +13,7 @@ from Pipelines import TrainingPipelines
 from Datasets.TNewsDatasets import get_tnews_datasets_fn
 from Preprocessings.TNewsPreprocessings import get_tnews_preprocessings_fn
 from Preprocessings import BPETokenizer
-from LearingRates import WarmupLearningRates
+from LearningRates import WarmupLearningRates
 from TrainSteps import TrainStepsDefault, TrainStepsReduceLROnPlateau
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 

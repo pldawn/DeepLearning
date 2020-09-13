@@ -9,7 +9,7 @@ import tensorflow.keras as krs
 from Schedule import TrainingSchedule
 from Datasets.ImdbDatasets import get_imdb_datasets_fn
 from Preprocessings.ImdbPreprocessings import get_imdb_preprocessings_fn
-from LearingRates import WarmupLearningRates
+from LearningRates import WarmupLearningRates
 from TrainSteps import TrainStepsDefault
 from Layers.SingleVectorAddtiveAttention import SingleVectorAddtiveAttention
 
